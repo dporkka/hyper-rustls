@@ -22,7 +22,7 @@ jobs:
           - stable
           - beta
           - nightly
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         # but only stable on macos/windows (slower platforms)
         include:
           - os: macos-latest
@@ -73,7 +73,7 @@ jobs:
         run: cargo test --release --no-run
 
   msrv:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.63"
+          toolchain: "1.71.0"
 
       - name: Check MSRV
         run: cargo check --lib --all-features
@@ -102,7 +102,7 @@ jobs:
 
   docs:
     name: Check for documentation errors
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -159,3 +159,20 @@ jobs:
         uses: taiki-e/install-action@cargo-hack
       - name: Check feature powerset
         run: cargo hack --no-dev-deps check --feature-powerset --depth 2
+
+  # The entire purpose of this compatibility release is to remove the
+  # vulnerable rustls-webpki 0.102 dependency without waivers.
+  audit:
+    name: No RustSec vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cargo-audit
+      - name: Audit dependency graph (no ignores)
+        run: cargo audit
